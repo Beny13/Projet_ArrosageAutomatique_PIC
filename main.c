@@ -4,12 +4,17 @@
 #include "Buttons.h"
 #include "lcd.h"
 #include "StateInitial.h"
+#include "timeHandler.h"
 #include <stdio.h>
 
 #define PARAM_COUNT 45
 #define EEPROM_CHECK_ADDRESS 0x0
 #define EEPROM_CHECK_FLAG 'y'
 #define EEPROM_DATA_START 0x1
+#define EEPROM_CURRENT_HALF_ADDRESS 0x2B
+#define CURRENT_DATE_HIGH_INDEX 42
+#define CURRENT_DATE_LOW_INDEX 43
+#define HALF_IN_ONE_WEEK 336
 
 void init()
 {
@@ -37,11 +42,28 @@ void init()
     // Disable the Peripheral Interrupts
     //INTERRUPT_PeripheralInterruptDisable();
 
+    // Start Timer1 to count half hours
+    TMR1_StartTimer();
+}
+
+uint16_t uint8to16(uint8_t high, uint8_t low)
+{
+    return ((uint16_t)high << 8) | low;
+}
+
+uint8_t uint16to8High(uint16_t value)
+{
+    return (uint8_t)value >> 8;
+}
+
+uint8_t uint16to8Low(uint16_t value)
+{
+    return (uint8_t)value;
 }
 
 bool checkCalendar(uint8_t* parameters)
 {
-    uint16_t theTime = ((uint16_t)parameters[42] << 8) | parameters[43];
+    uint16_t theTime = uint8to16(parameters[42], parameters[43]);
     int byteToSelect = theTime / 8;
     int shift = theTime % 8;
 
@@ -96,13 +118,24 @@ void readParametersFromFlash(uint8_t* parameters)
         parameters[i] = eeprom_read(currentAddress);
         ++currentAddress;
     }
-
 }
 
 bool flashHasParameters()
 {
     unsigned char address = 0x0;
     return eeprom_read(address) == 'y';
+}
+
+void handleTimer(uint8_t* parameters)
+{
+    if (halfHasChanged) {
+        halfHasChanged = 0;
+        uint16_t theTime = uint8to16(parameters[CURRENT_DATE_HIGH_INDEX], parameters[CURRENT_DATE_LOW_INDEX]);
+        theTime = (theTime + 1) % HALF_IN_ONE_WEEK;
+
+        parameters[CURRENT_DATE_HIGH_INDEX] = uint16to8High(theTime);
+        parameters[CURRENT_DATE_LOW_INDEX] = uint16to8Low(theTime);
+    }
 }
 
 void arrosageLoop()
@@ -125,6 +158,8 @@ void arrosageLoop()
         if (eusartRxCount > 0) {
             saveParametersFromEUSART(parameters);
         }
+
+        handleTimer(parameters);
     }
 }
 

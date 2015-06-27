@@ -347,7 +347,7 @@ void RTCDecHrs(void)
         dateTime.Hour = (Max_Hr-1);
     }
 }
-
+/*
 void RTCisr(void)
 {
     // Re-arm the timer of another second
@@ -361,7 +361,7 @@ void RTCisr(void)
 
      // Interrupt has been serviced
     TMR1IF = 0;
-}
+}*/
 /**
  End of File
 */

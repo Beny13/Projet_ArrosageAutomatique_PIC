@@ -50,7 +50,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 #include <xc.h>
 #include "tmr1.h"
-#include "../StateRTC.h"
+#include "../timeHandler.h"
 /**
   Section: Global Variables Definitions
 */
