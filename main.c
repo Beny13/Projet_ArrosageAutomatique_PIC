@@ -73,9 +73,15 @@ bool checkCalendar(uint8_t* parameters)
     return false;
 }
 
+uint8_t getHumidity()
+{
+    uint8_t humidity = ADC_GetConversion(0) / 10;
+    return humidity > 99 ? 99 : humidity;
+}
+
 bool checkHumidity(uint8_t* parameters)
 {
-    return (ADC_GetConversion(0) / 10) < parameters[44];
+    return getHumidity() < parameters[44];
 }
 
 void arrosageStart()
@@ -138,6 +144,29 @@ void handleTimer(uint8_t* parameters)
     }
 }
 
+void int2bin(int a, char* buffer, int buf_size)
+{
+    buffer += (buf_size - 1);
+    for (int i = 7; i >= 0; --i) {
+        *buffer-- = (a & 1) + '0';
+        a >>= 1;
+    }
+}
+
+void displayParameters(uint8_t* parameters)
+{
+    
+    LCDGoto(0,0);
+    char buffer[10];
+    sprintf(buffer, "%d", parameters[44]);
+    LCDPutStr(buffer);
+    LCDGoto(0,1);
+
+    sprintf(buffer, "%d", getHumidity());
+    LCDPutStr(buffer);
+    DisplayClr();
+}
+
 void arrosageLoop()
 {
     uint8_t parameters[PARAM_COUNT];
@@ -160,6 +189,7 @@ void arrosageLoop()
         }
 
         handleTimer(parameters);
+        displayParameters(parameters);
     }
 }
 
@@ -205,8 +235,8 @@ void testFillFakeParameters(uint8_t* parameters)
     parameters[43] = 0b00000001;
 
     // Filling fake humidity
-    // 75%
-    parameters[44] = 0b01001011;
+    // 76%
+    parameters[44] = 0b01001100;
 }
 
 void testFillFakeEEPROM()
@@ -220,6 +250,6 @@ void testFillFakeEEPROM()
 void main(void)
 {
     init();
-    testFillFakeEEPROM();
+    // testFillFakeEEPROM();
     arrosageLoop();
 }
