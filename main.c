@@ -153,18 +153,28 @@ void int2bin(int a, char* buffer, int buf_size)
     }
 }
 
+
+uint8_t display1 = 0;
+uint8_t display2 = 0;
+
 void displayParameters(uint8_t* parameters)
 {
-    
-    LCDGoto(0,0);
+    if (display1 == parameters[44] && display2 == getHumidity())
+        return;
+
+    display1 = parameters[44];
+    display2 = getHumidity();
+
+    DisplayClr();
     char buffer[10];
+
+    LCDGoto(0,0);
     sprintf(buffer, "%d", parameters[44]);
     LCDPutStr(buffer);
     LCDGoto(0,1);
 
     sprintf(buffer, "%d", getHumidity());
     LCDPutStr(buffer);
-    DisplayClr();
 }
 
 void arrosageLoop()
